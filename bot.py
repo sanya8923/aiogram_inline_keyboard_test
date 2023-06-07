@@ -1,14 +1,19 @@
 import asyncio
 import logging
+from contextlib import suppress
+
+from aiogram.types import InlineKeyboardMarkup
+
+import config_reader
+from random import randint
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Text
 from aiogram.filters.command import Command, Message
 from aiogram.filters.callback_data import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.exceptions import TelegramBadRequest
 
-import config_reader
-from random import randint
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config_reader.config.bot_token.get_secret_value())
@@ -20,7 +25,8 @@ async def cmd_start(message: Message):
     kb = [
         [
             KeyboardButton(text='/link'),
-            KeyboardButton(text='/random')
+            KeyboardButton(text='/random'),
+            KeyboardButton(text='/number')
         ]
     ]
 
@@ -62,16 +68,16 @@ user_data = {}
 def get_keyboard():
     button = [
         [
-            types.InlineKeyboardButton(text='-1', callback_data='num_decr'),
-            types.InlineKeyboardButton(text='+1', callback_data='num_incr')
+            InlineKeyboardButton(text='-1', callback_data='num_decr'),
+            InlineKeyboardButton(text='+1', callback_data='num_incr')
         ],
-        [types.InlineKeyboardButton(text='confirm', callback_data='num_finish')]
+        [InlineKeyboardButton(text='confirm', callback_data='num_finish')]
     ]
-    result = types.InlineKeyboardMarkup(inline_keyboard=button)
+    result = InlineKeyboardMarkup(inline_keyboard=button)
     return result
 
 
-async def update_num_text(message: types.Message, new_value: int):
+async def update_num_text(message: Message, new_value: int):
     if suppress(TelegramBadRequest):  # Страховка от MessageNotModified
         await message.edit_text(
             f'write number: {new_value}',
@@ -80,7 +86,7 @@ async def update_num_text(message: types.Message, new_value: int):
 
 
 @dp.message(Command('number'))
-async def cmd_numbers(message: types.Message):
+async def cmd_numbers(message: Message):
     user_data[message.from_user.id] = 0
     await message.answer(
         f'Your number: 0',
@@ -89,7 +95,7 @@ async def cmd_numbers(message: types.Message):
 
 
 @dp.callback_query(Text(startswith='num_'))
-async def callback_num(callback: types.CallbackQuery):
+async def callback_num(callback: CallbackQuery):
     user_value = user_data.get(callback.from_user.id, 0)
     action = callback.data.split('_')[1]
 
