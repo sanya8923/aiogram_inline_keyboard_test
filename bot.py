@@ -14,10 +14,13 @@ dp = Dispatcher()
 
 # builder.row
 @dp.message(Command('start'))
-async def cmd_start(message: Message, bot: Bot):
+async def cmd_start(message: Message):
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text='github', url='https://github.com/sanya8923/'))
     await message.answer('Push the button:', reply_markup=builder.as_markup())
+
+
+@
 
 
 async def main():
